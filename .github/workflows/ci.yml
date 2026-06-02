@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  infra:
+    name: Validate infra
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: terraform fmt
+        run: terraform fmt -check -recursive terraform
+      - name: terraform validate (prod)
+        working-directory: terraform/envs/prod
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+      - name: Install kubeconform + kustomize
+        run: |
+          curl -sSL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz -C /usr/local/bin kubeconform
+          curl -sSL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar xz -C /usr/local/bin kustomize
+      - name: Render + validate manifests
+        run: |
+          kustomize build k8s/apps/farfalla > /tmp/render.yaml
+          kubeconform -strict -ignore-missing-schemas /tmp/render.yaml
+          kubeconform -strict -ignore-missing-schemas k8s/bootstrap k8s/platform
+
+  app:
+    name: Build & test ERP-Farfalla
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout app repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.APP_REPO }}
+          ref: ${{ vars.APP_REF }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - name: Backend verify
+        working-directory: backend
+        run: mvn -B verify
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Frontend build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
