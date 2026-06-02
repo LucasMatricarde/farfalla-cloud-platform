@@ -10,6 +10,6 @@ GitOps deployment of the ERP-Farfalla app on AWS (k3s + ArgoCD), provisioned wit
 - **Observability:** kube-prometheus-stack + Loki.
 
 ## Deploy quickstart
-See `docs/runbook.md`. Architecture in `docs/architecture.md`.
+Full deploy order in `docs/runbook.md`. Architecture in `docs/architecture.md`.
 
 > v1 scope: single node, single env. Future: EKS, multi-env, autoscaling, Datadog, canary.
