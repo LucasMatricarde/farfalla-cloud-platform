@@ -18,6 +18,7 @@ env:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
     steps:
       - name: Checkout GitOps repo
         uses: actions/checkout@v4
@@ -64,8 +65,8 @@ jobs:
           REGISTRY: ${{ steps.ecr.outputs.registry }}
           TAG: ${{ github.sha }}
         run: |
-          kustomize edit set image "$REGISTRY/farfalla-backend:$TAG"
-          kustomize edit set image "$REGISTRY/farfalla-frontend:$TAG"
+          kustomize edit set image "__BACKEND_IMAGE__=$REGISTRY/farfalla-backend:$TAG"
+          kustomize edit set image "__FRONTEND_IMAGE__=$REGISTRY/farfalla-frontend:$TAG"
 
       - name: Commit & push manifest bump
         run: |
