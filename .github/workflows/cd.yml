@@ -1,0 +1,76 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write   # OIDC
+  contents: write   # commit manifest bump
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitOps repo
+        uses: actions/checkout@v4
+
+      - name: Checkout app repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.APP_REPO }}
+          ref: ${{ vars.APP_REF }}
+          path: app
+
+      - name: Configure AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.CD_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push backend
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          docker build --target prod -t "$REGISTRY/farfalla-backend:$TAG" app/backend
+          docker push "$REGISTRY/farfalla-backend:$TAG"
+
+      - name: Build & push frontend
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          docker build -t "$REGISTRY/farfalla-frontend:$TAG" app/frontend
+          docker push "$REGISTRY/farfalla-frontend:$TAG"
+
+      - name: Install kustomize
+        run: curl -sSL https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar xz -C /usr/local/bin kustomize
+
+      - name: Bump image tags in GitOps manifest
+        working-directory: k8s/apps/farfalla
+        env:
+          REGISTRY: ${{ steps.ecr.outputs.registry }}
+          TAG: ${{ github.sha }}
+        run: |
+          kustomize edit set image "$REGISTRY/farfalla-backend:$TAG"
+          kustomize edit set image "$REGISTRY/farfalla-frontend:$TAG"
+
+      - name: Commit & push manifest bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/apps/farfalla/kustomization.yaml
+          git commit -m "chore(deploy): bump images to ${GITHUB_SHA::7}" || echo "no changes"
+          git push
