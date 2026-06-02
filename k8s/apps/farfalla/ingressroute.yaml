@@ -1,0 +1,21 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: farfalla
+  namespace: farfalla
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`__APP_HOST__`) && (PathPrefix(`/api`) || PathPrefix(`/actuator`) || PathPrefix(`/swagger-ui`) || PathPrefix(`/v3/api-docs`))
+      kind: Rule
+      services:
+        - name: backend
+          port: 8080
+    - match: Host(`__APP_HOST__`)
+      kind: Rule
+      services:
+        - name: frontend
+          port: 80
+  tls:
+    secretName: app-tls

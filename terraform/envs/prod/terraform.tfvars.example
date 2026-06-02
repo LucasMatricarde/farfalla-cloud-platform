@@ -1,0 +1,4 @@
+region        = "us-east-1"
+operator_cidr = "1.2.3.4/32"     # replace with YOUR_IP/32
+key_name      = "my-ec2-keypair" # existing key pair name
+github_repo   = "LucasMatricarde/farfalla-cloud-platform" # GitOps repo that runs CD (NOT the app repo)

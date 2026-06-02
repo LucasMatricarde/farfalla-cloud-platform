@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+
+# Install k3s with built-in Traefik, kubeconfig readable, API cert valid for the Elastic IP.
+curl -sfL https://get.k3s.io | \
+  INSTALL_K3S_VERSION="${k3s_version}" \
+  sh -s - server \
+    --write-kubeconfig-mode 644 \
+    --tls-san ${elastic_ip}
+
+# Wait for node ready
+until kubectl get nodes 2>/dev/null | grep -q ' Ready'; do sleep 5; done
+
+# Expose externally-usable kubeconfig (server points to the Elastic IP)
+sed "s/127.0.0.1/${elastic_ip}/g" /etc/rancher/k3s/k3s.yaml > /home/ubuntu/kubeconfig.yaml || true
+chown ubuntu:ubuntu /home/ubuntu/kubeconfig.yaml || true

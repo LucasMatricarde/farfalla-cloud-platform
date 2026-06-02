@@ -1,0 +1,23 @@
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Node / Angular (only if building locally)
+node_modules/
+dist/
+
+# Secrets / kube
+kubeconfig
+*.kubeconfig
+k8s/**/secret.yaml
+!k8s/**/secret.example.yaml
+
+# OS / editor
+.DS_Store
+.idea/
+*.swp
