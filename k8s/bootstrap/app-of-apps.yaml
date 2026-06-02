@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+spec:
+  project: farfalla
+  source:
+    repoURL: __GITHUB_REPO_URL__
+    targetRevision: main
+    path: k8s/platform
+    directory:
+      recurse: true
+      include: "{cert-manager/application.yaml,kube-prometheus-stack/application.yaml,loki/application.yaml}"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: farfalla-app
+  namespace: argocd
+spec:
+  project: farfalla
+  source:
+    repoURL: __GITHUB_REPO_URL__
+    targetRevision: main
+    path: k8s/apps/farfalla
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: farfalla
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
