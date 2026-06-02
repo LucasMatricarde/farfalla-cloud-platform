@@ -37,7 +37,9 @@ Replace before bootstrap (EIP-derived host = dashes, e.g. `1-2-3-4.sslip.io`):
 Commit and push these to `main`.
 
 ## 5. GitHub repo variables
-Set: `APP_REPO`, `APP_REF`, `CD_ROLE_ARN`.
+Set: `APP_REPO` (the ERP-Farfalla app repo, e.g. `LucasMatricarde/erp-farfalla`), `APP_REF` (branch/tag to build, e.g. `main`), `CD_ROLE_ARN` (Terraform output `cd_role_arn`).
+
+> **OIDC trust note:** the `github_repo` tfvar (§3) must be **this GitOps repo** — the one running the CD workflow (`LucasMatricarde/farfalla-cloud-platform`), NOT the app repo. The CD role's trust condition is `repo:${github_repo}:*`; if it names the app repo instead, `configure-aws-credentials` in CD fails to assume the role.
 
 ## 6. Cluster bootstrap
 ```bash
