@@ -39,6 +39,7 @@ jobs:
         with:
           repository: ${{ vars.APP_REPO }}
           ref: ${{ vars.APP_REF }}
+          token: ${{ secrets.APP_REPO_TOKEN }}
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
