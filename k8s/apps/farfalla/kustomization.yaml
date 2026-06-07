@@ -2,20 +2,20 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: farfalla
 resources:
-  - namespace.yaml
-  - backend-config.yaml
-  - backend-deployment.yaml
-  - backend-service.yaml
-  - backend-servicemonitor.yaml
-  - frontend-deployment.yaml
-  - frontend-service.yaml
-  - certificate.yaml
-  - ingressroute.yaml
-  - ../../platform/cert-manager
+- namespace.yaml
+- backend-config.yaml
+- backend-deployment.yaml
+- backend-service.yaml
+- backend-servicemonitor.yaml
+- frontend-deployment.yaml
+- frontend-service.yaml
+- certificate.yaml
+- ingressroute.yaml
+- ../../platform/cert-manager
 images:
-  - name: __BACKEND_IMAGE__
-    newName: __ECR_BACKEND_REPO__
-    newTag: latest
-  - name: __FRONTEND_IMAGE__
-    newName: __ECR_FRONTEND_REPO__
-    newTag: latest
+- name: __BACKEND_IMAGE__
+  newName: 816069136240.dkr.ecr.us-east-1.amazonaws.com/farfalla-backend
+  newTag: 62cdb609473cff39ccc2772c83e464ce30143e0a
+- name: __FRONTEND_IMAGE__
+  newName: 816069136240.dkr.ecr.us-east-1.amazonaws.com/farfalla-frontend
+  newTag: 62cdb609473cff39ccc2772c83e464ce30143e0a
